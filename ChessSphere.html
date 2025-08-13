@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChessSphere - The Next-Gen Chess Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- ChessboardJS and Chess.js libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- NEW THEME: DARK BLUE & GOLD --- */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #0d1117; /* Dark Navy/Charcoal */
+            color: #c9d1d9; /* Light Gray Text */
+            overflow-x: hidden; 
+        }
+        h1, h2, h3, .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        .btn { font-family: 'Orbitron', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 0.75rem 2rem; border-radius: 0.5rem; transition: all 0.3s ease-in-out; display: inline-block; text-align: center; cursor: pointer; }
+        .btn-primary { background-color: #d4af37; color: #0d1117; border: 2px solid #d4af37; box-shadow: 0 0 15px #d4af37; }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 0 25px #d4af37; }
+        .btn-secondary { background-color: transparent; color: #d4af37; border: 2px solid #d4af37; }
+        .btn-secondary:hover { background-color: #d4af37; color: #0d1117; transform: translateY(-3px) scale(1.05); box-shadow: 0 0 15px #d4af37; }
+        
+        .glass-card { background: rgba(16, 20, 27, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 1rem; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .title-glow { text-shadow: 0 0 8px #d4af37, 0 0 10px #d4af37; }
+        
+        /* Board Design */
+        .chessboard-031de .white-1e1d7 { background-color: #F0D9B5; } /* Light wood */
+        .chessboard-031de .black-3c85d { background-color: #B58863; } /* Dark wood */
+        
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.2); border-left-color: #d4af37; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .square-55d63 { position: relative; }
+        
+        /* Highlighting Styles */
+        .highlight-possible::after { content: ''; display: block; position: absolute; width: 34%; height: 34%; top: 33%; left: 33%; border-radius: 50%; background: rgba(0,0,0,0.2); }
+        .highlight-last-move { box-shadow: inset 0 0 3px 3px rgba(212, 175, 55, 0.7); }
+
+        /* Modal Styles */
+        .modal { z-index: 50; }
+        #analysis-modal-content h4, #difficulty-modal h4 { font-family: 'Orbitron', sans-serif; font-size: 1.25rem; color: #d4af37; margin-top: 1rem; margin-bottom: 0.5rem; }
+
+        /* Fix for header overlap */
+        main { padding-top: 80px; }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-md fixed top-0 left-0 right-0 z-40">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold font-orbitron title-glow" onclick="showPage('home-screen')">Chess<span class="text-amber-400">Sphere</span></a>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#" class="text-gray-300 hover:text-amber-400" onclick="showPage('about-page')">About Chess</a>
+                <a href="#" class="text-gray-300 hover:text-amber-400" onclick="showPage('how-to-play-page')">How to Play</a>
+                <a href="#" class="text-gray-300 hover:text-amber-400" onclick="showPage('request-page')">Request Feature</a>
+                <a href="#" class="text-gray-300 hover:text-amber-400" onclick="showPage('privacy-page')">Privacy Policy</a>
+            </div>
+            <button class="btn btn-primary" onclick="showPage('home-screen', true)">Play Now</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Home Screen -->
+        <div id="home-screen" class="page">
+            <section class="min-h-screen flex items-center justify-center p-4 text-center">
+                <div class="w-full max-w-4xl">
+                    <h1 class="text-6xl md:text-8xl font-black uppercase title-glow">Master The Game</h1>
+                    <p class="mt-4 text-xl md:text-2xl text-gray-300 tracking-wider font-orbitron">Your Arena for AI-Powered Chess.</p>
+                    <!-- Added ID here for scrolling -->
+                    <div id="play-section" class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                        <button id="start-ai-btn" class="btn btn-primary text-lg py-4">Engage Gemini AI</button>
+                        <button id="start-human-btn" class="btn btn-secondary text-lg py-4">Challenge a Friend</button>
+                    </div>
+                </div>
+            </section>
+             <!-- New Sections for Homepage -->
+            <section class="py-20 px-4">
+                <div class="container mx-auto max-w-6xl text-center">
+                    <h2 class="text-4xl font-bold uppercase title-glow mb-12">Why ChessSphere?</h2>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="glass-card p-8">
+                            <h3 class="text-2xl font-bold mb-2 font-orbitron text-amber-400">Adaptive AI</h3>
+                            <p>Face an AI that learns and adapts. With three difficulty levels, ChessSphere offers a challenge for everyone from beginners to grandmasters.</p>
+                        </div>
+                        <div class="glass-card p-8">
+                            <h3 class="text-2xl font-bold mb-2 font-orbitron text-amber-400">Instant Analysis</h3>
+                            <p>Don't just play—learn. Get instant, AI-powered analysis after every game to understand your mistakes and master new strategies.</p>
+                        </div>
+                        <div class="glass-card p-8">
+                            <h3 class="text-2xl font-bold mb-2 font-orbitron text-amber-400">Premium Experience</h3>
+                            <p>From our sleek, professional design to the intuitive gameplay, every detail is crafted to provide a next-level chess experience.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- About Chess Page -->
+        <div id="about-page" class="page hidden py-12 container mx-auto px-6">
+            <h1 class="text-4xl font-bold font-orbitron title-glow mb-8">About Chess</h1>
+            <div class="glass-card p-8 space-y-4 text-lg">
+                <p>Chess is a board game for two players, called White and Black, each controlling an army of chess pieces in their color. The game is played on a square board of eight rows (called ranks) and eight columns (called files), giving 64 squares of alternating colors, light and dark. Each player begins the game with 16 pieces: one king, one queen, two rooks, two knights, two bishops, and eight pawns.</p>
+                <p>The object of the game is to checkmate the opponent's king. Checkmate is a situation in which a player's king is in a position to be captured (in check) and there is no legal move to escape the capture. It is the ultimate goal in chess, as it ends the game. A game can also end in a draw in several ways.</p>
+            </div>
+        </div>
+
+        <!-- How to Play Page -->
+        <div id="how-to-play-page" class="page hidden py-12 container mx-auto px-6">
+            <h1 class="text-4xl font-bold font-orbitron title-glow mb-8">How to Play Chess: Tricks to Win</h1>
+            <div class="glass-card p-8 space-y-4 text-lg">
+                <h2 class="text-2xl font-bold font-orbitron">Basic Principles</h2>
+                <p><strong>Control the Center:</strong> The central squares (d4, e4, d5, e5) are the most important on the board. Pieces in the center control more squares and have more mobility.</p>
+                <p><strong>Develop Your Pieces:</strong> In the opening, your goal is to move your pieces from their starting squares to more active positions. A good rule of thumb is to move your knights and bishops out before your queen and rooks.</p>
+                <p><strong>King Safety:</strong> Protecting your king is paramount. Castling is a special move that allows you to move your king to a safer position and activate one of your rooks at the same time.</p>
+            </div>
+        </div>
+
+        <!-- Request Feature Page -->
+        <div id="request-page" class="page hidden py-12 container mx-auto px-6">
+            <h1 class="text-4xl font-bold font-orbitron title-glow mb-8">Request a Feature or Game</h1>
+            <div class="glass-card p-8">
+                <!-- 
+                    IMPORTANT: To make this form work, you need to:
+                    1. Create a free account at https://formspree.io/
+                    2. Create a new form in Formspree.
+                    3. Replace the placeholder "YOUR_FORM_ID" in the action URL below with your actual form ID.
+                -->
+                <form id="request-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="text" name="name" placeholder="Your Name" class="bg-gray-800 text-white p-3 rounded-lg" required>
+                        <input type="email" name="email" placeholder="Your Email" class="bg-gray-800 text-white p-3 rounded-lg" required>
+                        <input type="tel" name="phone" placeholder="Phone Number" class="bg-gray-800 text-white p-3 rounded-lg">
+                        <input type="tel" name="whatsapp" placeholder="WhatsApp Number" class="bg-gray-800 text-white p-3 rounded-lg">
+                    </div>
+                    <textarea name="message" placeholder="Your request..." class="bg-gray-800 text-white p-3 rounded-lg w-full mt-6 h-32" required></textarea>
+                    <button type="submit" class="btn btn-primary mt-6 w-full">Submit Request</button>
+                </form>
+                <p id="form-status" class="mt-4 text-center"></p>
+            </div>
+        </div>
+
+        <!-- Privacy Policy Page -->
+        <div id="privacy-page" class="page hidden py-12 container mx-auto px-6">
+            <h1 class="text-4xl font-bold font-orbitron title-glow mb-8">Privacy Policy</h1>
+            <div class="glass-card p-8 space-y-4 text-lg">
+                <p>This website does not collect any personal data from its users, except for the information you voluntarily provide in the "Request Feature" form. This information is sent directly to our development team and is not stored on any server.</p>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game-screen" class="page hidden">
+            <div class="min-h-screen flex flex-col lg:flex-row items-center justify-center gap-8 p-4 relative">
+                <div id="board" class="w-full max-w-sm md:max-w-md lg:max-w-lg"></div>
+                <div class="w-full max-w-sm lg:w-80 glass-card p-6">
+                    <h2 class="text-2xl font-bold font-orbitron title-glow mb-4">Game Status</h2>
+                    <div id="status-display" class="glass-card bg-black/30 p-4 rounded-lg mb-4">
+                        <div class="flex items-center justify-between">
+                            <span id="status" class="font-bold text-lg">White's Turn</span>
+                            <div id="ai-thinking" class="spinner hidden"></div>
+                        </div>
+                        <div id="hint-box" class="text-amber-400 font-bold mt-2 text-center"></div>
+                    </div>
+                    <h3 class="text-xl font-bold font-orbitron title-glow mb-2">Move History</h3>
+                    <div id="move-history" class="text-sm bg-black/30 rounded-lg p-3 h-48 overflow-y-auto font-mono"></div>
+                    <div class="mt-6 flex flex-col gap-3">
+                        <button id="hint-btn" class="btn btn-special">✨ Get Hint</button>
+                        <button id="new-game-btn" class="btn btn-primary">New Game</button>
+                        <button id="back-to-home-btn" class="btn btn-secondary">Back to Home</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Modals -->
+    <div id="difficulty-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 rounded-lg text-center">
+            <h2 class="text-3xl font-orbitron title-glow mb-6">Select AI Difficulty</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <button data-difficulty="easy" class="btn btn-secondary text-lg">Easy</button>
+                <button data-difficulty="medium" class="btn btn-primary text-lg">Medium</button>
+                <button data-difficulty="hard" class="btn btn-special text-lg">Hard</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="instructions-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 rounded-lg text-center">
+            <h2 class="text-3xl font-orbitron title-glow mb-6">How to Play</h2>
+            <p class="mb-6">Drag and drop the pieces to make your move. The goal is to checkmate your opponent's king!</p>
+            <button id="start-game-btn" class="btn btn-primary">Start Game</button>
+        </div>
+    </div>
+
+    <div id="analysis-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-6 rounded-lg max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-orbitron title-glow">Game Analysis</h2>
+                <button id="close-analysis-btn" class="text-2xl text-white hover:text-red-500">&times;</button>
+            </div>
+            <div id="analysis-modal-content" class="text-gray-200"></div>
+        </div>
+    </div>
+
+    <!-- JS libraries -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            const pieceSVGs = {
+                bK: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25c-2.5 2.5-5 2.5-7.5 0v-5h15v5c-2.5 2.5-5 2.5-7.5 0z" stroke-linecap="butt"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7.5H12.5V37z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 29.5h20v-5h-20v5z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 15c0 0 5-5 10-5s10 5 10 5v10H12.5V15z" stroke-linecap="butt"/></g></svg>`,
+                bQ: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm16.5-4.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm16.5 4.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm17-1.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/><path d="M8 12s2-3 4-3 4 3 4 3l-4 15-4-15zm8-3.5s2-3 4-3 4 3 4 3l-4 15-4-15zm8.5-1s2-3 4-3 4 3 4 3l-4 15-4-15zm8.5 1.5s2-3 4-3 4 3 4 3l-4 15-4-15z" stroke-linecap="butt"/><path d="M10.5 30c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm4.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm7.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm7.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5z"/><path d="M10 36c-2 2 16 3.5 25 0-2-2-23-1.5-25 0z" stroke-linecap="butt"/></g></svg>`,
+                bR: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 36v-4h21v4H12z" stroke-linecap="butt"/><path d="M14 29.5v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M14 16.5L11 14h23l-3 2.5H14z" stroke-linecap="butt"/><path d="M11 14V9h4v2h5V9h5v2h5V9h4v5" stroke-linecap="butt"/></g></svg>`,
+                bN: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c-2 0-9-11.5-8-21" fill="#000"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.04-.94 1.41-3.04 1-4-1-2-1-4 0-6 2-4 7.47-4 10-3 2.25.85 4.02 3.23 4 5 .22 1.93-1.22 3.52-3 4-1.5 1-4 .5-5-1" fill="#000"/><path d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" fill="#fff"/><path d="M15 15.5c-1.5 1.5-3 2-3 4 0 2 1 3 3 3 1 1 1 2-1 2-1 0-1 1-1 2 0 1 1 1 2 1s2-1 2-2" fill="#000"/><path d="M25 13s-1-2-2.5-2-2.5 2-2.5 2"/></g></svg>`,
+                bB: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.43-13.5-2-3.39 2.43-10.11 1.03-13.5 2 0 0-1.65.54-3 2 .68.97 1.65.99 3 .5z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5-6.5-5.5-18.5-7.5-18.5s-12.5 12-7.5 18.5c0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M22.5 25c1.5-1.5 1.5-2.5 1.5-2.5-1-1-1.5-1-1.5-1s-1.5.5-1.5 2c.5 1.5 1.5 1.5 1.5 1.5z" fill="#fff"/></g></svg>`,
+                bP: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 11c-4.418 0-8 3.582-8 8v2h16v-2c0-4.418-3.582-8-8-8zm-2 10h4v2h-4v-2zm-2 2h8v2h-8v-2zm-2 2h12v2H16.5v-2zm-2 2h16v2h-16v-2z"/></g></svg>`,
+                wK: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25c-2.5 2.5-5 2.5-7.5 0v-5h15v5c-2.5 2.5-5 2.5-7.5 0z" stroke-linecap="butt"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7.5H12.5V37z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 29.5h20v-5h-20v5z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 15c0 0 5-5 10-5s10 5 10 5v10H12.5V15z" stroke-linecap="butt"/></g></svg>`,
+                wQ: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm16.5-4.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm16.5 4.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm17-1.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/><path d="M8 12s2-3 4-3 4 3 4 3l-4 15-4-15zm8-3.5s2-3 4-3 4 3 4 3l-4 15-4-15zm8.5-1s2-3 4-3 4 3 4 3l-4 15-4-15zm8.5 1.5s2-3 4-3 4 3 4 3l-4 15-4-15z" stroke-linecap="butt"/><path d="M10.5 30c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm4.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm7.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5zm7.5 0c-1 2.5-1 5 1.5 5s4-2.5 4-5c-1.5-2-2.5-2.5-4-5-1.5 2.5-1.5 3-1.5 5z"/><path d="M10 36c-2 2 16 3.5 25 0-2-2-23-1.5-25 0z" stroke-linecap="butt"/></g></svg>`,
+                wR: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 36v-4h21v4H12z" stroke-linecap="butt"/><path d="M14 29.5v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M14 16.5L11 14h23l-3 2.5H14z" stroke-linecap="butt"/><path d="M11 14V9h4v2h5V9h5v2h5V9h4v5" stroke-linecap="butt"/></g></svg>`,
+                wN: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c-2 0-9-11.5-8-21" fill="#fff"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.04-.94 1.41-3.04 1-4-1-2-1-4 0-6 2-4 7.47-4 10-3 2.25.85 4.02 3.23 4 5 .22 1.93-1.22 3.52-3 4-1.5 1-4 .5-5-1" fill="#fff"/><path d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" fill="#000"/><path d="M15 15.5c-1.5 1.5-3 2-3 4 0 2 1 3 3 3 1 1 1 2-1 2-1 0-1 1-1 2 0 1 1 1 2 1s2-1 2-2" fill="#fff"/><path d="M25 13s-1-2-2.5-2-2.5 2-2.5 2"/></g></svg>`,
+                wB: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.43-13.5-2-3.39 2.43-10.11 1.03-13.5 2 0 0-1.65.54-3 2 .68.97 1.65.99 3 .5z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5-6.5-5.5-18.5-7.5-18.5s-12.5 12-7.5 18.5c0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M22.5 25c1.5-1.5 1.5-2.5 1.5-2.5-1-1-1.5-1-1.5-1s-1.5.5-1.5 2c.5 1.5 1.5 1.5 1.5 1.5z"/></g></svg>`,
+                wP: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 11c-4.418 0-8 3.582-8 8v2h16v-2c0-4.418-3.582-8-8-8zm-2 10h4v2h-4v-2zm-2 2h8v2h-8v-2zm-2 2h12v2H16.5v-2zm-2 2h16v2h-16v-2z"/></g></svg>`
+            };
+            function pieceTheme(piece) { return 'data:image/svg+xml;base64,' + window.btoa(pieceSVGs[piece]); }
+
+            let board = null, game = new Chess(), gameMode = 'human', difficulty = 'medium', lastMove = null;
+            const homeScreen = $('#home-screen'), gameScreen = $('#game-screen'), statusEl = $('#status');
+            const moveHistoryEl = $('#move-history'), aiThinkingEl = $('#ai-thinking'), hintBox = $('#hint-box');
+            const analysisBtn = $('#analysis-btn'), hintBtn = $('#hint-btn'), analysisModal = $('#analysis-modal'), difficultyModal = $('#difficulty-modal'), instructionsModal = $('#instructions-modal');
+
+            function onDragStart(source, piece) {
+                if (game.game_over() || game.turn() !== piece.charAt(0) || (gameMode === 'ai' && piece.charAt(0) === 'b')) return false;
+                return true;
+            }
+
+            function onDrop(source, target) {
+                removePossibleMoveHighlights();
+                if (lastMove) { $('#board .square-' + lastMove.from).removeClass('highlight-last-move'); $('#board .square-' + lastMove.to).removeClass('highlight-last-move'); }
+                let move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) return 'snapback';
+                $('#board .square-' + move.from).addClass('highlight-last-move');
+                $('#board .square-' + move.to).addClass('highlight-last-move');
+                lastMove = move;
+                updateStatus();
+                logMove(move);
+                if (gameMode === 'ai' && !game.game_over()) { getAiMove(); }
+            }
+            
+            function makeAiMove(move) {
+                if (lastMove) { $('#board .square-' + lastMove.from).removeClass('highlight-last-move'); $('#board .square-' + lastMove.to).removeClass('highlight-last-move'); }
+                game.move(move);
+                board.position(game.fen());
+                const aiMove = game.history({ verbose: true }).pop();
+                $('#board .square-' + aiMove.from).addClass('highlight-last-move');
+                $('#board .square-' + aiMove.to).addClass('highlight-last-move');
+                lastMove = aiMove;
+                updateStatus();
+                logMove(aiMove);
+            }
+
+            function updateStatus() {
+                let statusText = '';
+                if (game.game_over()) {
+                    if (game.in_checkmate()) { statusText = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`; } 
+                    else { statusText = 'Game Over: Draw'; }
+                    hintBtn.addClass('hidden');
+                    setTimeout(getAnalysis, 1000);
+                } else {
+                    statusText = `${game.turn() === 'w' ? 'White' : 'Black'}'s Turn`;
+                    if (game.in_check()) statusText += ' (in check)';
+                    hintBtn.removeClass('hidden');
+                }
+                statusEl.text(statusText);
+            }
+
+            function logMove(move) {
+                const moveNumber = Math.floor((game.history().length + 1) / 2);
+                const moveText = `${move.color === 'w' ? moveNumber + '. ' : ''}${move.san}`;
+                moveHistoryEl.append(`<div>${moveText}</div>`);
+                moveHistoryEl.scrollTop(moveHistoryEl[0].scrollHeight);
+            }
+            
+            async function callGemini(prompt) {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API error`);
+                const result = await response.json();
+                return result.candidates[0].content.parts[0].text;
+            }
+
+            async function getAiMove() {
+                if (game.game_over()) return;
+                aiThinkingEl.removeClass('hidden');
+                let prompt = '';
+                switch(difficulty) {
+                    case 'easy':
+                        prompt = `You are a novice chess player. Given the FEN: ${game.fen()}, what is a reasonable but not necessarily the best move for black? Respond with only the move in SAN.`;
+                        break;
+                    case 'hard':
+                        prompt = `You are a grandmaster chess engine. Analyze this FEN: ${game.fen()}. Find the optimal move for black. Respond with only the move in SAN.`;
+                        break;
+                    default:
+                        prompt = `You are a strong chess engine. The current position is FEN: ${game.fen()}. What is the best move for black? Respond with only the move in SAN.`;
+                }
+                try {
+                    const aiMoveText = await callGemini(prompt);
+                    if (game.move(aiMoveText, { sloppy: true })) {
+                        game.undo();
+                        makeAiMove(aiMoveText);
+                    } else { makeRandomMove(); }
+                } catch (error) { makeRandomMove(); } 
+                finally { aiThinkingEl.addClass('hidden'); }
+            }
+            
+            function makeRandomMove() {
+                const possibleMoves = game.moves();
+                if (possibleMoves.length > 0) makeAiMove(possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
+            }
+
+            async function getHint() {
+                hintBtn.prop('disabled', true).addClass('opacity-50');
+                hintBox.text('Getting hint...');
+                const turn = game.turn() === 'w' ? 'White' : 'Black';
+                const prompt = `The current chess position is FEN: ${game.fen()}. What is a good move for ${turn}? Suggest one move in SAN and nothing else.`;
+                try {
+                    const hint = await callGemini(prompt);
+                    hintBox.text(`Hint: ${hint.trim()}`);
+                } catch (e) {
+                    hintBox.text('Could not get hint.');
+                } finally {
+                    hintBtn.prop('disabled', false).removeClass('opacity-50');
+                    setTimeout(() => hintBox.text(''), 5000);
+                }
+            }
+
+            async function getAnalysis() {
+                analysisModal.removeClass('hidden');
+                $('#analysis-modal-content').html('<div class="flex justify-center items-center h-48"><div class="spinner !w-12 !h-12"></div></div>');
+                const pgn = game.pgn();
+                const prompt = `You are a chess coach. Analyze the following game in PGN format. Provide a brief, easy-to-read analysis. Identify the opening, the turning point, major blunders, and brilliant moves. Format the response with simple headings. PGN: ${pgn}`;
+                try {
+                    const analysisText = await callGemini(prompt);
+                    const formattedText = analysisText.replace(/(\n\n)/g, '<br><br>').replace(/\n/g, '<br>').replace(/Opening:/g, '<h4>Opening</h4>').replace(/Turning Point:/g, '<h4>Turning Point</h4>').replace(/Blunders:/g, '<h4>Blunders</h4>').replace(/Brilliant Moves:/g, '<h4>Brilliant Moves</h4>').replace(/Summary:/g, '<h4>Summary</h4>');
+                    $('#analysis-modal-content').html(formattedText);
+                } catch (e) {
+                    $('#analysis-modal-content').text('Sorry, the analysis could not be generated.');
+                }
+            }
+
+            function removePossibleMoveHighlights() {
+                $('#board .square-55d63').removeClass('highlight-possible');
+            }
+
+            function onMouseoverSquare(square, piece) {
+                if (game.game_over() || !piece || piece.charAt(0) !== game.turn()) return;
+                const moves = game.moves({ square: square, verbose: true });
+                if (moves.length === 0) return;
+                moves.forEach(move => { $('#board .square-' + move.to).addClass('highlight-possible'); });
+            }
+
+            function onMouseoutSquare() {
+                removePossibleMoveHighlights();
+            }
+
+            function initChessGame(mode) {
+                gameMode = mode;
+                game.reset();
+                lastMove = null;
+                $('.highlight-last-move').removeClass('highlight-last-move');
+                moveHistoryEl.empty();
+                hintBox.text('');
+                const config = { 
+                    draggable: true, 
+                    position: 'start', 
+                    onDragStart: onDragStart, 
+                    onDrop: onDrop,
+                    onMouseoutSquare: onMouseoutSquare,
+                    onMouseoverSquare: onMouseoverSquare,
+                    pieceTheme: pieceTheme 
+                };
+                board = Chessboard('board', config);
+                $(window).resize(board.resize);
+                updateStatus();
+            }
+
+            function navigateToGame(mode, diff = 'medium') {
+                difficulty = diff;
+                showPage('game-screen');
+                setTimeout(() => initChessGame(mode), 100);
+            }
+
+            function showPage(pageId, playNow = false) {
+                $('.page').addClass('hidden');
+                $('#' + pageId).removeClass('hidden');
+                if (playNow && $('#play-section').length) {
+                    $('html, body').animate({
+                        scrollTop: $("#play-section").offset().top
+                    }, 1000);
+                }
+            }
+
+            window.showPage = showPage;
+
+            $('#start-ai-btn').on('click', () => difficultyModal.removeClass('hidden'));
+            $('#difficulty-modal button').on('click', function() {
+                const diff = $(this).data('difficulty');
+                difficultyModal.addClass('hidden');
+                instructionsModal.removeClass('hidden');
+                $('#start-game-btn').off('click').on('click', () => {
+                    instructionsModal.addClass('hidden');
+                    navigateToGame('ai', diff);
+                });
+            });
+            $('#start-human-btn').on('click', () => {
+                instructionsModal.removeClass('hidden');
+                $('#start-game-btn').off('click').on('click', () => {
+                    instructionsModal.addClass('hidden');
+                    navigateToGame('human');
+                });
+            });
+            $('#new-game-btn').on('click', () => {
+                if(gameMode === 'ai') {
+                    difficultyModal.removeClass('hidden');
+                } else {
+                    initChessGame('human');
+                }
+            });
+            $('#back-to-home-btn').on('click', () => showPage('home-screen'));
+            $('#hint-btn').on('click', getHint);
+            $('#close-analysis-btn').on('click', () => analysisModal.addClass('hidden'));
+
+            const form = document.getElementById('request-form');
+            form.addEventListener("submit", async function(event) {
+                event.preventDefault();
+                const data = new FormData(form);
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: data,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        $('#form-status').text("Thanks for your submission!");
+                        form.reset();
+                    } else {
+                        $('#form-status').text("Oops! There was a problem submitting your form");
+                    }
+                } catch (error) {
+                    $('#form-status').text("Oops! There was a problem submitting your form");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
